@@ -3,7 +3,7 @@
 
 $NDK = "C:\Users\javis\AppData\Local\Android\Sdk\ndk\29.0.14206865"
 $CLANG = "$NDK\toolchains\llvm\prebuilt\windows-x86_64\bin\aarch64-linux-android26-clang.cmd"
-$OUTPUT = "..\mitu_flutter\android\app\src\main\jniLibs\arm64-v8a\libpicoclaw.so"
+$OUTPUT = "build\android\arm64\libpicoclaw.so"
 
 $env:GOOS = "android"
 $env:GOARCH = "arm64"
