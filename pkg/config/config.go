@@ -301,13 +301,27 @@ type PerplexityConfig struct {
 }
 
 type WebToolsConfig struct {
-	Brave      BraveConfig      `json:"brave"`
-	DuckDuckGo DuckDuckGoConfig `json:"duckduckgo"`
-	Perplexity PerplexityConfig `json:"perplexity"`
+	Brave        BraveConfig      `json:"brave"`
+	DuckDuckGo   DuckDuckGoConfig `json:"duckduckgo"`
+	Perplexity   PerplexityConfig `json:"perplexity"`
+	FetchEnabled bool             `json:"fetch_enabled" env:"PICOCLAW_TOOLS_WEB_FETCH_ENABLED"`
+}
+
+type HardwareConfig struct {
+	Enabled bool `json:"enabled" env:"PICOCLAW_TOOLS_HARDWARE_ENABLED"`
 }
 
 type CronToolsConfig struct {
-	ExecTimeoutMinutes int `json:"exec_timeout_minutes" env:"PICOCLAW_TOOLS_CRON_EXEC_TIMEOUT_MINUTES"` // 0 means no timeout
+	Enabled            bool `json:"enabled" env:"PICOCLAW_TOOLS_CRON_ENABLED"`
+	ExecTimeoutMinutes int  `json:"exec_timeout_minutes" env:"PICOCLAW_TOOLS_CRON_EXEC_TIMEOUT_MINUTES"` // 0 means no timeout
+}
+
+type SpawnConfig struct {
+	Enabled bool `json:"enabled" env:"PICOCLAW_TOOLS_SPAWN_ENABLED"`
+}
+
+type MessageConfig struct {
+	Enabled bool `json:"enabled" env:"PICOCLAW_TOOLS_MESSAGE_ENABLED"`
 }
 
 type ExecConfig struct {
@@ -326,6 +340,9 @@ type ToolsConfig struct {
 	Cron       CronToolsConfig  `json:"cron"`
 	Exec       ExecConfig       `json:"exec"`
 	Filesystem FilesystemConfig `json:"filesystem"`
+	Spawn      SpawnConfig      `json:"spawn"`
+	Message    MessageConfig    `json:"message"`
+	Hardware   HardwareConfig   `json:"hardware"`
 }
 
 func DefaultConfig() *Config {
@@ -439,8 +456,10 @@ func DefaultConfig() *Config {
 					APIKey:     "",
 					MaxResults: 5,
 				},
+				FetchEnabled: false,
 			},
 			Cron: CronToolsConfig{
+				Enabled:            false,
 				ExecTimeoutMinutes: 5, // default 5 minutes for LLM operations
 			},
 			Exec: ExecConfig{
@@ -450,6 +469,15 @@ func DefaultConfig() *Config {
 			Filesystem: FilesystemConfig{
 				Enabled:      false,
 				WriteEnabled: false,
+			},
+			Spawn: SpawnConfig{
+				Enabled: false,
+			},
+			Message: MessageConfig{
+				Enabled: false,
+			},
+			Hardware: HardwareConfig{
+				Enabled: false,
 			},
 		},
 		Heartbeat: HeartbeatConfig{

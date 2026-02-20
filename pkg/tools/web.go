@@ -339,7 +339,8 @@ func (t *WebSearchTool) Execute(ctx context.Context, args map[string]interface{}
 }
 
 type WebFetchTool struct {
-	maxChars int
+	maxChars     int
+	fetchEnabled bool
 }
 
 func NewWebFetchTool(maxChars int) *WebFetchTool {
@@ -347,8 +348,15 @@ func NewWebFetchTool(maxChars int) *WebFetchTool {
 		maxChars = 50000
 	}
 	return &WebFetchTool{
-		maxChars: maxChars,
+		maxChars:     maxChars,
+		fetchEnabled: true, // enabled by default; callers override via SetFetchEnabled
 	}
+}
+
+// SetFetchEnabled controls whether the tool actually performs HTTP fetches.
+// When false, Execute returns an error without making any network request.
+func (t *WebFetchTool) SetFetchEnabled(enabled bool) {
+	t.fetchEnabled = enabled
 }
 
 func (t *WebFetchTool) Name() string {
@@ -378,6 +386,10 @@ func (t *WebFetchTool) Parameters() map[string]interface{} {
 }
 
 func (t *WebFetchTool) Execute(ctx context.Context, args map[string]interface{}) *ToolResult {
+	if !t.fetchEnabled {
+		return ErrorResult("fetch no permitido")
+	}
+
 	urlStr, ok := args["url"].(string)
 	if !ok {
 		return ErrorResult("url is required")

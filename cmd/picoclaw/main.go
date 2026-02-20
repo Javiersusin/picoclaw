@@ -562,8 +562,11 @@ func gatewayCmd() {
 		})
 
 	// Setup cron tool and service
-	execTimeout := time.Duration(cfg.Tools.Cron.ExecTimeoutMinutes) * time.Minute
-	cronService := setupCronTool(agentLoop, msgBus, cfg.WorkspacePath(), cfg.Agents.Defaults.RestrictToWorkspace, execTimeout, cfg)
+	var cronService *cron.CronService
+	if cfg.Tools.Cron.Enabled {
+		execTimeout := time.Duration(cfg.Tools.Cron.ExecTimeoutMinutes) * time.Minute
+		cronService = setupCronTool(agentLoop, msgBus, cfg.WorkspacePath(), cfg.Agents.Defaults.RestrictToWorkspace, execTimeout, cfg)
+	}
 
 	heartbeatService := heartbeat.NewHeartbeatService(
 		cfg.WorkspacePath(),
@@ -644,10 +647,12 @@ func gatewayCmd() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	if err := cronService.Start(); err != nil {
-		fmt.Printf("Error starting cron service: %v\n", err)
+	if cronService != nil {
+		if err := cronService.Start(); err != nil {
+			fmt.Printf("Error starting cron service: %v\n", err)
+		}
+		fmt.Println("✓ Cron service started")
 	}
-	fmt.Println("✓ Cron service started")
 
 	if err := heartbeatService.Start(); err != nil {
 		fmt.Printf("Error starting heartbeat service: %v\n", err)
@@ -689,7 +694,9 @@ func gatewayCmd() {
 	healthServer.Stop(context.Background())
 	deviceService.Stop()
 	heartbeatService.Stop()
-	cronService.Stop()
+	if cronService != nil {
+		cronService.Stop()
+	}
 	agentLoop.Stop()
 	channelManager.StopAll(ctx)
 	fmt.Println("✓ Gateway stopped")

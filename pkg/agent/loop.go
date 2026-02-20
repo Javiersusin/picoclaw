@@ -99,32 +99,40 @@ func registerSharedTools(cfg *config.Config, msgBus *bus.MessageBus, registry *A
 		}); searchTool != nil {
 			agent.Tools.Register(searchTool)
 		}
-		agent.Tools.Register(tools.NewWebFetchTool(50000))
+		webFetchTool := tools.NewWebFetchTool(50000)
+		webFetchTool.SetFetchEnabled(cfg.Tools.Web.FetchEnabled)
+		agent.Tools.Register(webFetchTool)
 
 		// Hardware tools (I2C, SPI) - Linux only, returns error on other platforms
-		agent.Tools.Register(tools.NewI2CTool())
-		agent.Tools.Register(tools.NewSPITool())
+		if cfg.Tools.Hardware.Enabled {
+			agent.Tools.Register(tools.NewI2CTool())
+			agent.Tools.Register(tools.NewSPITool())
+		}
 
 		// Message tool
-		messageTool := tools.NewMessageTool()
-		messageTool.SetSendCallback(func(channel, chatID, content string) error {
-			msgBus.PublishOutbound(bus.OutboundMessage{
-				Channel: channel,
-				ChatID:  chatID,
-				Content: content,
+		if cfg.Tools.Message.Enabled {
+			messageTool := tools.NewMessageTool()
+			messageTool.SetSendCallback(func(channel, chatID, content string) error {
+				msgBus.PublishOutbound(bus.OutboundMessage{
+					Channel: channel,
+					ChatID:  chatID,
+					Content: content,
+				})
+				return nil
 			})
-			return nil
-		})
-		agent.Tools.Register(messageTool)
+			agent.Tools.Register(messageTool)
+		}
 
 		// Spawn tool with allowlist checker
-		subagentManager := tools.NewSubagentManager(provider, agent.Model, agent.Workspace, msgBus)
-		spawnTool := tools.NewSpawnTool(subagentManager)
-		currentAgentID := agentID
-		spawnTool.SetAllowlistChecker(func(targetAgentID string) bool {
-			return registry.CanSpawnSubagent(currentAgentID, targetAgentID)
-		})
-		agent.Tools.Register(spawnTool)
+		if cfg.Tools.Spawn.Enabled {
+			subagentManager := tools.NewSubagentManager(provider, agent.Model, agent.Workspace, msgBus)
+			spawnTool := tools.NewSpawnTool(subagentManager)
+			currentAgentID := agentID
+			spawnTool.SetAllowlistChecker(func(targetAgentID string) bool {
+				return registry.CanSpawnSubagent(currentAgentID, targetAgentID)
+			})
+			agent.Tools.Register(spawnTool)
+		}
 
 		// Update context builder with the complete tools registry
 		agent.ContextBuilder.SetToolsRegistry(agent.Tools)
