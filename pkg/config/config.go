@@ -311,14 +311,21 @@ type CronToolsConfig struct {
 }
 
 type ExecConfig struct {
+	Enabled            bool     `json:"enabled" env:"PICOCLAW_TOOLS_EXEC_ENABLED"`
 	EnableDenyPatterns bool     `json:"enable_deny_patterns" env:"PICOCLAW_TOOLS_EXEC_ENABLE_DENY_PATTERNS"`
 	CustomDenyPatterns []string `json:"custom_deny_patterns" env:"PICOCLAW_TOOLS_EXEC_CUSTOM_DENY_PATTERNS"`
 }
 
+type FilesystemConfig struct {
+	Enabled      bool `json:"enabled" env:"PICOCLAW_TOOLS_FILESYSTEM_ENABLED"`
+	WriteEnabled bool `json:"write_enabled" env:"PICOCLAW_TOOLS_FILESYSTEM_WRITE_ENABLED"`
+}
+
 type ToolsConfig struct {
-	Web  WebToolsConfig  `json:"web"`
-	Cron CronToolsConfig `json:"cron"`
-	Exec ExecConfig      `json:"exec"`
+	Web        WebToolsConfig   `json:"web"`
+	Cron       CronToolsConfig  `json:"cron"`
+	Exec       ExecConfig       `json:"exec"`
+	Filesystem FilesystemConfig `json:"filesystem"`
 }
 
 func DefaultConfig() *Config {
@@ -437,7 +444,12 @@ func DefaultConfig() *Config {
 				ExecTimeoutMinutes: 5, // default 5 minutes for LLM operations
 			},
 			Exec: ExecConfig{
+				Enabled:            false,
 				EnableDenyPatterns: true,
+			},
+			Filesystem: FilesystemConfig{
+				Enabled:      false,
+				WriteEnabled: false,
 			},
 		},
 		Heartbeat: HeartbeatConfig{
